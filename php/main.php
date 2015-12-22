@@ -31,27 +31,33 @@ for ($i = $company_start; $i <= $company_total; $i ++) {
     }
     // 如果达到采集数量则停止
     if (count($results) >= $total) {
-        file_put_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'companies.json', json_encode($results));
-        echo "got jobs link: " . count(array_filter(array_column($results, 'jobs_link'))). "\n";
-        exit(" done!");
+        break;
     }
-
 }
+// 写入文件并统计
+file_put_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'companies.json', json_encode($results));
+echo "got jobs link: " . count(array_filter(array_column($results, 'jobs_link'))). "\n";
 echo "use:" . (microtime(true)-$start_time) . "s\n";
+exit(" done!");
 
 // 分析招聘链接
 function get_company_jobs_link($content, &$domain) {
     $ps = array(
-        '/<a[^>]*href="([^"]*)"[^>]*>[^<]*加入[^<]*<\/a>/',
         '/<a[^>]*href="([^"]*)"[^>]*>[^<]*加入我们[^<]*<\/a>/',
         '/<a[^>]*href="([^"]*)"[^>]*>[^<]*人才招聘[^<]*<\/a>/',
         '/<a[^>]*href="([^"]*)"[^>]*>[^<]*招聘信息[^<]*<\/a>/',
         '/<a[^>]*href="([^"]*)"[^>]*>[^<]*诚聘英才[^<]*<\/a>/',
         '/<a[^>]*href="([^"]*)"[^>]*>[^<]*招贤纳士[^<]*<\/a>/',
+        '/<a[^>]*href="([^"]*)"[^>]*>[^<]*加入[^<]*<\/a>/',
+        '/<a[^>]*href="([^"]*)"[^>]*>[^<]*聘[^<]*<\/a>/',
+        '/<a[^>]*href="([^"]*join[^"]*)"[^>]*>/',
+        '/<a[^>]*href="([^"]*zhaopin[^"]*)"[^>]*>/',
+        '/<a[^>]*href="([^"]*job[^"]*)"[^>]*>/',
+        '/<a[^>]*href="([^"]*offer[^"]*)"[^>]*>/',
     );
     foreach($ps as $p) {
         if (preg_match_all($p, $content, $out)) {
-            $link = $out[1] ? $out[1][0] : '';
+            $link = $out[1] ? array_pop($out[1]) : '';
             if (strpos($link, 'http') === 0) {
                 // do nothing
             } else if (strpos($link, 'javascript') === 0) {
